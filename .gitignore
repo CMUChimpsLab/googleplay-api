@@ -7,3 +7,6 @@
 
 # ignore downloaded apps
 *.apk
+
+# ignore my configure file
+config.py
