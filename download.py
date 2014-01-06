@@ -33,20 +33,38 @@ else:
 
 # Connect
 api = GooglePlayAPI(ANDROID_ID)
-api.login(GOOGLE_LOGIN, GOOGLE_PASSWORD, AUTH_TOKEN)
+try:
+  api.login(GOOGLE_LOGIN, GOOGLE_PASSWORD, AUTH_TOKEN)
+except:
+  print >> sys.stderr, int(time.time()), packagename
+  traceback.print_exc(file=sys.stderr)
+  sys.exit(-1)
 
 # Get the version code and the offer type from the app details
-m = api.details(packagename)
+try:
+  m = api.details(packagename)
+except:
+  print >> sys.stderr, int(time.time()), packagename
+  traceback.print_exc(file=sys.stderr)
+  sys.exit(-1)
+  
 doc = m.docV2
 vc = doc.details.appDetails.versionCode
-ot = doc.offer[0].offerType
+try:
+  ot = doc.offer[0].offerType
+except:
+  print >> sys.stderr, int(time.time()), packagename
+  print >> sys.stderr, doc
+  traceback.print_exc(file=sys.stderr)
+  sys.exit(-1)
 
 
 packageName = doc.details.appDetails.packageName
 docDict = eval(str(api.toDict(doc)))
 #apkDetails is collection for doc
 #TODO add version control
-db.apkDetails.insert(docDict)
+db.apkDetails.update({'details.appDetails.packageName': packageName}, docDict, upsert=True)
+
 infoDict = docDict['details']['appDetails']
 
 isFree = not doc.offer[0].checkoutFlowRequired
@@ -61,7 +79,7 @@ else:
 # Download
 if isFree and not isSizeExceed:
   try:
-    data = api.download(packagename, vc, ot)
+    data = api.download(packageName, vc, ot)
   except Exception as e:
     print >> sys.stderr,int(time.time()), packageName
     traceback.print_exc(file=sys.stderr)
@@ -81,4 +99,4 @@ infoDict['fileDir'] = fileDir
 if isSizeExceed != None:
   infoDict['isSizeExceed'] = isSizeExceed
 
-db.apkInfo.insert(infoDict)
+db.apkInfo.update({'packageName': packageName}, infoDict, upsert=True)

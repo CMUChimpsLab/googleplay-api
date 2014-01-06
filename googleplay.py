@@ -14,6 +14,8 @@ from google.protobuf.message import Message, DecodeError
 import googleplay_pb2
 import config
 
+import sys
+
 class LoginError(Exception):
     def __init__(self, value):
         self.value = value
@@ -127,7 +129,11 @@ class GooglePlayAPI(object):
             params = {}
             for d in data:
                 if not "=" in d: continue
-                k, v = d.split("=")
+                try:
+                  k, v = d.split("=")
+                except Exception as e:
+                  print >> sys.stderr, "googleplay.py", d
+                  raise e 
                 params[k.strip().lower()] = v.strip()
             if "auth" in params:
                 self.setAuthSubToken(params["auth"])
@@ -264,7 +270,12 @@ class GooglePlayAPI(object):
         message = self.executeRequestApi2(path, data)
 
         url = message.payload.buyResponse.purchaseStatusResponse.appDeliveryData.downloadUrl
-        cookie = message.payload.buyResponse.purchaseStatusResponse.appDeliveryData.downloadAuthCookie[0]
+        
+        try:
+          cookie = message.payload.buyResponse.purchaseStatusResponse.appDeliveryData.downloadAuthCookie[0]
+        except Exception as e:
+          print >> sys.stderr, "googleplay.py", message.payload.buyResponse.purchaseStatusResponse.appDeliveryData.downloadAuthCookie
+          raise e 
 
         cookies = {
             str(cookie.name): str(cookie.value) # python-requests #459 fixes this
