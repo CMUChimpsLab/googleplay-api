@@ -70,9 +70,13 @@ isApkUpdated = False
 #Do not get fields not in docDict from apkDetails
 preDetailsEntry = db.apkDetails.find_one({'details.appDetails.packageName': packageName}, {'updatedTimestamp':0, '_id':0})
 if preDetailsEntry != docDict:
+    #Warning: sometimes versionCode is not available
     #versionCode is used for determine whether apk has been updated
     #http://developer.android.com/tools/publishing/versioning.html
-    isApkUpdated = docDict['details']['appDetails']['versionCode'] != preDetailsEntry['details']['appDetails']['versionCode']
+    try:
+        isApkUpdated = (not preDetailsEntry) or (docDict['details']['appDetails']['versionCode'] != preDetailsEntry['details']['appDetails']['versionCode'])
+    except KeyError as e:
+        isApkUpdated = True
     docDict['updatedTimestamp'] = datetime.datetime.utcnow()
     db.apkDetails.update({'details.appDetails.packageName': packageName}, docDict, upsert=True)
 else:
@@ -82,7 +86,7 @@ else:
 infoDict = docDict['details']['appDetails']
 
 isFree = not doc.offer[0].checkoutFlowRequired
-isDownloaded = False
+isCurrentVersionDownloaded = False
 
 #If exceed 50mb apk will not be downloaded, 50mb limit is set on play store by googleplay
 #http://developer.android.com/distribute/googleplay/publish/preparing.html#size
@@ -92,44 +96,56 @@ if doc.details.appDetails.installationSize > 52428800:
 else:
   isSizeExceed = False
 
-# Download
-if isFree and not isSizeExceed and isApkUpdated:
+#Remove db entry fields which are not in infoDict
+preInfoEntry = db.apkInfo.find_one({'packageName': packageName}, {'isFree':0, 'isSizeExceed': 0, 'updatedTimestamp':0, '_id':0})
+if preInfoEntry == None:
+  preInfoEntry = {}
+preIsDownloaded = preInfoEntry.pop('isDownloaded', False)
+preIsCurrentVersionDownloaded = preInfoEntry.pop('isCurrentVersionDownloaded', False)
+preIsApkUpdated = preInfoEntry.pop('isApkUpdated', False)
+#permi
+preFileDir = preInfoEntry.pop('fileDir', '')
+
+# Download when it is free and not exceed 50 mb and (current version in apkInfo was not downloaded or app has been updated since last time update apkInfo version)
+if isFree and (not isSizeExceed) and ((not preIsCurrentVersionDownloaded) or isApkUpdated):
   try:
     data = api.download(packageName, vc, ot)
   except Exception as e:
     print >> sys.stderr,int(time.time()), packageName
     traceback.print_exc(file=sys.stderr)
-    isDownloaded = False
+    isCurrentVersionDownloaded = False
   else:
     print int(time.time()), packageName
     print "Downloading %s..." % sizeof_fmt(doc.details.appDetails.installationSize),
+    if preFileDir != '':
+      fileDir = preFileDir
+      filename = preFileDir + '/' + packagename + ".apk"
     open(filename, "wb").write(data)
     print "Done"
-    isDownloaded = True
-  
-#Remove db entry fields which are not in infoDict
-preInfoEntry = db.apkInfo.find_one({'packageName': packageName}, {'isFree':0, 'isSizeExceed': 0, 'isApkUpdated':0, 'updatedTimestamp':0, '_id':0})
-preIsDownloaded = preInfoEntry.pop('isDownloaded', False)
-preFileDir = preInfoEntry.pop('fileDir', '')
+    isCurrentVersionDownloaded = True
+else:
+    print int(time.time()), packageName
+    print "Escape downloading isFree: %s, isSizeExceed: %s, preIsCurrentVersionDownloaded: %s, isApkUpdated: %s"%( isFree, isSizeExceed, preIsCurrentVersionDownloaded, isApkUpdated)
 
-#update apkInfo entry if infoDict updated (a new entry is also counted as updated) or apkDownloaded first time
-if preInfoEntry != infoDict or (preIsDownloaded == False and isDownloaded == True):
+#update apkInfo entry if infoDict updated (a new entry is also counted as updated) or current version apkDownloaded first time
+if preInfoEntry != infoDict or (preIsCurrentVersionDownloaded == False and isCurrentVersionDownloaded == True):
     #apkInfo is collection for doc.details.appDetails, and also add isFree and isDownloaded
     infoDict['isFree'] = isFree
     #infoDict['isDownloaded'] only indicates whether we ever downloaded this apk.
-    #isDownloaded indicates whether current download succeeds 
-    infoDict['isDownloaded'] = preIsDownloaded or isDownloaded
-    if isDownloaded:
+    #isCurrentVersionDownloaded indicates whether current download succeeds 
+    infoDict['isDownloaded'] = preIsDownloaded or isCurrentVersionDownloaded
+    infoDict['isCurrentVersionDownloaded'] = isCurrentVersionDownloaded
+    if isCurrentVersionDownloaded:
         #Only update fileDir when new file updated
         #first round crawling has one bug that all apps have a not empty fileDir 
         infoDict['fileDir'] = fileDir
     else:
         #Still using previous fileDir
         infoDict['fileDir'] = preFileDir 
-    #This is for static analysis purpose. Add the flag when versionCode changed and apk is sucessfully downloaded. 
+    #This is for static analysis purpose. Add the flag when current version apk is sucessfully downloaded or pre version has not been analyzed. 
     #Everytime only analyze db.apkInfo.find({'isApkUpdated': True})
     #after analyze change the isApkUpdated to False
-    infoDict['isApkUpdated'] = isApkUpdated and isDownloaded
+    infoDict['isApkUpdated'] = preIsApkUpdated or isCurrentVersionDownloaded
     if isSizeExceed != None:
         infoDict['isSizeExceed'] = isSizeExceed
     infoDict['updatedTimestamp'] = datetime.datetime.utcnow()
