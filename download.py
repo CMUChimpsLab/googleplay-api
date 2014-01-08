@@ -14,6 +14,7 @@ from helpers import sizeof_fmt
 
 from pymongo import MongoClient
 
+import datetime
 client = MongoClient('localhost',27017)
 db = client['androidApp']
 
@@ -61,23 +62,38 @@ except:
 
 packageName = doc.details.appDetails.packageName
 docDict = eval(str(api.toDict(doc)))
-#apkDetails is collection for doc
-#TODO add version control
-db.apkDetails.update({'details.appDetails.packageName': packageName}, docDict, upsert=True)
+
+isApkUpdated = False
+#apkDetails is collection for doc + updated timestamp
+#if docDict does change, update the db entry
+#use more query instead of insertion to speed up
+#Do not get fields not in docDict from apkDetails
+preDetailsEntry = db.apkDetails.find_one({'details.appDetails.packageName': packageName}, {'updatedTimestamp':0, '_id':0})
+if preDetailsEntry != docDict:
+    #versionCode is used for determine whether apk has been updated
+    #http://developer.android.com/tools/publishing/versioning.html
+    isApkUpdated = docDict['details']['appDetails']['versionCode'] != preDetailsEntry['details']['appDetails']['versionCode']
+    docDict['updatedTimestamp'] = datetime.datetime.utcnow()
+    db.apkDetails.update({'details.appDetails.packageName': packageName}, docDict, upsert=True)
+else:
+    isApkUpdated = False
+
 
 infoDict = docDict['details']['appDetails']
 
 isFree = not doc.offer[0].checkoutFlowRequired
 isDownloaded = False
 
-#If exceed 50mb do not download
+#If exceed 50mb apk will not be downloaded, 50mb limit is set on play store by googleplay
+#http://developer.android.com/distribute/googleplay/publish/preparing.html#size
 isSizeExceed = None
 if doc.details.appDetails.installationSize > 52428800:
   isSizeExceed = True
 else:
   isSizeExceed = False
+
 # Download
-if isFree and not isSizeExceed:
+if isFree and not isSizeExceed and isApkUpdated:
   try:
     data = api.download(packageName, vc, ot)
   except Exception as e:
@@ -91,12 +107,31 @@ if isFree and not isSizeExceed:
     print "Done"
     isDownloaded = True
   
+#Remove db entry fields which are not in infoDict
+preInfoEntry = db.apkInfo.find_one({'packageName': packageName}, {'isFree':0, 'isSizeExceed': 0, 'isApkUpdated':0, 'updatedTimestamp':0, '_id':0})
+preIsDownloaded = preInfoEntry.pop('isDownloaded', False)
+preFileDir = preInfoEntry.pop('fileDir', '')
 
-#apkInfo is collection for doc.details.appDetails, and also add isFree and isDownloaded
-infoDict['isFree'] = isFree
-infoDict['isDownloaded'] = isDownloaded
-infoDict['fileDir'] = fileDir
-if isSizeExceed != None:
-  infoDict['isSizeExceed'] = isSizeExceed
-
-db.apkInfo.update({'packageName': packageName}, infoDict, upsert=True)
+#update apkInfo entry if infoDict updated (a new entry is also counted as updated) or apkDownloaded first time
+if preInfoEntry != infoDict or (preIsDownloaded == False and isDownloaded == True):
+    #apkInfo is collection for doc.details.appDetails, and also add isFree and isDownloaded
+    infoDict['isFree'] = isFree
+    #infoDict['isDownloaded'] only indicates whether we ever downloaded this apk.
+    #isDownloaded indicates whether current download succeeds 
+    infoDict['isDownloaded'] = preIsDownloaded or isDownloaded
+    if isDownloaded:
+        #Only update fileDir when new file updated
+        #first round crawling has one bug that all apps have a not empty fileDir 
+        infoDict['fileDir'] = fileDir
+    else:
+        #Still using previous fileDir
+        infoDict['fileDir'] = preFileDir 
+    #This is for static analysis purpose. Add the flag when versionCode changed and apk is sucessfully downloaded. 
+    #Everytime only analyze db.apkInfo.find({'isApkUpdated': True})
+    #after analyze change the isApkUpdated to False
+    infoDict['isApkUpdated'] = isApkUpdated and isDownloaded
+    if isSizeExceed != None:
+        infoDict['isSizeExceed'] = isSizeExceed
+    infoDict['updatedTimestamp'] = datetime.datetime.utcnow()
+    #even the download is not successful, if the appDetails is updated, the db entry will be updated
+    db.apkInfo.update({'packageName': packageName}, infoDict, upsert=True)
