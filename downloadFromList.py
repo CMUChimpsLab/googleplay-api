@@ -1,4 +1,6 @@
 import sys
+import time
+import traceback
 from pymongo import MongoClient
 from multiprocessing import Pool, get_logger
 from download import connect, downloadApkAndUpdateDB
@@ -15,8 +17,12 @@ if __name__ == '__main__':
     appList = appListFile.read().split('\n')
     appListFile.close()
     def downloadPackage(packagename, db=db, fileDir=fileDir):
-        api = connect()
-        downloadApkAndUpdateDB(api, db, packagename, fileDir)
+        try:
+          api = connect()
+          downloadApkAndUpdateDB(api, db, packagename, fileDir)
+        except:
+            print >> sys.stderr, int(time.time()), packagename
+            traceback.print_exc(file=sys.stderr)
         return packagename
       
     
@@ -25,4 +31,4 @@ if __name__ == '__main__':
     pool = Pool(numberOfProcess)
     for packagename in pool.imap(downloadPackage, appList):
         print packagename
-        sys.stdout.flush()
+        #sys.stdout.flush()

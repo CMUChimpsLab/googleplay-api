@@ -25,7 +25,6 @@ def connect():
     except:
       print >> sys.stderr, int(time.time()), packagename
       traceback.print_exc(file=sys.stderr)
-      sys.exit(-1)
     return api
 
 # Get the version code and the offer type from the app details
@@ -36,7 +35,7 @@ def downloadApkAndUpdateDB(api, db, packagename, fileDir):
     except:
       print >> sys.stderr, int(time.time()), packagename
       traceback.print_exc(file=sys.stderr)
-      sys.exit(-1)
+      return
       
     doc = m.docV2
     vc = doc.details.appDetails.versionCode
@@ -46,10 +45,11 @@ def downloadApkAndUpdateDB(api, db, packagename, fileDir):
       print >> sys.stderr, int(time.time()), packagename
       print >> sys.stderr, doc
       traceback.print_exc(file=sys.stderr)
-      sys.exit(-1)
+      return
     
     
     packageName = doc.details.appDetails.packageName
+    #use eval, since only with api.toDict, pymongo will throw some warning related to wsgi
     docDict = eval(str(api.toDict(doc)))
     
     isApkUpdated = False
@@ -92,7 +92,6 @@ def downloadApkAndUpdateDB(api, db, packagename, fileDir):
     preIsDownloaded = preInfoEntry.pop('isDownloaded', False)
     preIsCurrentVersionDownloaded = preInfoEntry.pop('isCurrentVersionDownloaded', False)
     preIsApkUpdated = preInfoEntry.pop('isApkUpdated', False)
-    #permi
     preFileDir = preInfoEntry.pop('fileDir', '')
     
     # Download when it is free and not exceed 50 mb and (current version in apkInfo was not downloaded or app has been updated since last time update apkInfo version)
