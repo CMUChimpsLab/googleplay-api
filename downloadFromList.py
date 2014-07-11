@@ -13,6 +13,7 @@ if __name__ == '__main__':
     appListFile = open(sys.argv[1])
     fileDir = sys.argv[2]
 
+    #the first line of appList is a timestamp
     appListFile.readline()
     appList = appListFile.read().split('\n')
     appListFile.close()
@@ -26,9 +27,14 @@ if __name__ == '__main__':
         return packagename
       
     
+    for app in appList:
+      downloadPackage(app)
 
-    numberOfProcess = 1
-    pool = Pool(numberOfProcess)
-    for packagename in pool.imap(downloadPackage, appList):
-        print packagename
-        #sys.stdout.flush()
+    """
+    the following code always stops for a period of time
+    """
+    #numberOfProcess = 1
+    #pool = Pool(numberOfProcess)
+    #for packagename in pool.imap(downloadPackage, appList):
+    #    print packagename
+    #    #sys.stdout.flush()
