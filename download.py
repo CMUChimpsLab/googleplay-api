@@ -112,6 +112,8 @@ def downloadApkAndUpdateDB(api, db, packagename, fileDir):
         print "Done"
         isCurrentVersionDownloaded = True
     else:
+        if isApkUpdated == False and preIsCurrentVersionDownloaded == True:
+            isCurrentVersionDownloaded = True
         print int(time.time()), packageName
         print "Escape downloading isFree: %s, isSizeExceed: %s, preIsCurrentVersionDownloaded: %s, isApkUpdated: %s"%( isFree, isSizeExceed, preIsCurrentVersionDownloaded, isApkUpdated)
     
@@ -120,7 +122,8 @@ def downloadApkAndUpdateDB(api, db, packagename, fileDir):
         #apkInfo is collection for doc.details.appDetails, and also add isFree and isDownloaded
         infoDict['isFree'] = isFree
         #infoDict['isDownloaded'] only indicates whether we ever downloaded this apk.
-        #isCurrentVersionDownloaded indicates whether current download succeeds 
+        #isCurrentVersionDownloaded indicates whether current version download succeeds 
+        #It is possible previous round of cralwing did download this version, although current round fails to download the same version.
         infoDict['isDownloaded'] = preIsDownloaded or isCurrentVersionDownloaded
         infoDict['isCurrentVersionDownloaded'] = isCurrentVersionDownloaded
         if isCurrentVersionDownloaded:
