@@ -133,10 +133,10 @@ def downloadApkAndUpdateDB(api, db, packagename, fileDir):
         else:
             #Still using previous fileDir
             infoDict['fileDir'] = preFileDir 
-        #This is for static analysis purpose. Add the flag when current version apk is sucessfully downloaded or pre version has not been analyzed. 
+        #This is for static analysis purpose. Add the flag when current version apk is sucessfully downloaded and apk version updated or pre version has not been analyzed. 
         #Everytime only analyze db.apkInfo.find({'isApkUpdated': True})
         #after analyze change the isApkUpdated to False
-        infoDict['isApkUpdated'] = preIsApkUpdated or isCurrentVersionDownloaded
+        infoDict['isApkUpdated'] = preIsApkUpdated or (isApkUpdated and isCurrentVersionDownloaded)
         if isSizeExceed != None:
             infoDict['isSizeExceed'] = isSizeExceed
         infoDict['updatedTimestamp'] = datetime.datetime.utcnow()
