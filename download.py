@@ -23,7 +23,7 @@ def connect():
     try:
       api.login(GOOGLE_LOGIN, GOOGLE_PASSWORD, AUTH_TOKEN)
     except:
-      print >> sys.stderr, int(time.time()), packagename
+      print >> sys.stderr, int(time.time()) 
       traceback.print_exc(file=sys.stderr)
     return api
 
