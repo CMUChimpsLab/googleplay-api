@@ -19,8 +19,9 @@ if __name__ == '__main__':
     appListFile.close()
     api = connect()
     nextAuthTime = int(time.time()) + random.randint(900,3600)
-    def downloadPackage(packagename, api = api, db=db, fileDir=fileDir):
+    def downloadPackage(packagename, db=db, fileDir=fileDir):
         global nextAuthTime
+        global api
         try:
           if int(time.time()) > nextAuthTime:
               api = connect()
