@@ -126,8 +126,8 @@ def downloadApkAndUpdateDB(api, db, packagename, fileDir):
         #It is possible previous round of cralwing did download this version, although current round fails to download the same version.
         infoDict['isDownloaded'] = preIsDownloaded or isCurrentVersionDownloaded
         infoDict['isCurrentVersionDownloaded'] = isCurrentVersionDownloaded
-        if isCurrentVersionDownloaded:
-            #Only update fileDir when new file updated
+        if preFileDir == "":
+            #Only update fileDir when preFileDir is empty which means never downloaded
             #first round crawling has one bug that all apps have a not empty fileDir 
             infoDict['fileDir'] = fileDir
         else:
