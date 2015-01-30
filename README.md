@@ -1,4 +1,6 @@
 # Google Play Unofficial Python API
+The original code is at https://github.com/egirault/googleplay-api
+I revised it mainly for PrivacyGrade specific database setting.
 
 An unofficial Python API that let you search, browse and download Android apps from Google Play (formerly Android Market).
 
