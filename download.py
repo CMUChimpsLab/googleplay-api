@@ -13,6 +13,7 @@ from googleplay import GooglePlayAPI
 from helpers import sizeof_fmt
 
 from pymongo import MongoClient
+from dbConfig import USERNAME, PASSWORD
 
 import datetime
 
@@ -158,6 +159,7 @@ if __name__ == '__main__':
         fileDir = '.'
     
     client = MongoClient('localhost',27017)
+    client["admin"].authenticate(USERNAME, PASSWORD)
     db = client['androidApp']
     
     api = connect()
