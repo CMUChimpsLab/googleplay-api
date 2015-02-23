@@ -51,7 +51,7 @@ if __name__ == '__main__':
         google_password = GOOGLE_PASSWORD_S[i]
         auth_token = AUTH_TOKEN_S[i]
 
-      print "Using account %s" % (google_login)
+      print "\n%d \t Using account %s\n" % (int(time.time()), google_login)
       return connect(android_id, google_login, google_password, auth_token)
 
     api = apiConnect()

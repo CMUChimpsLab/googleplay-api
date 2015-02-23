@@ -270,6 +270,10 @@ class GooglePlayAPI(object):
         message = self.executeRequestApi2(path, data)
 
         url = message.payload.buyResponse.purchaseStatusResponse.appDeliveryData.downloadUrl
+
+        # There was an error
+        if not(message.commands.displayErrorMessage == None):
+          raise Exception(message.commands.displayErrorMessage)
         
         try:
           cookie = message.payload.buyResponse.purchaseStatusResponse.appDeliveryData.downloadAuthCookie[0]
