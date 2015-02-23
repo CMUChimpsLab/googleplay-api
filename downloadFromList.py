@@ -6,6 +6,8 @@ from multiprocessing import Pool, get_logger
 from download import connect, downloadApkAndUpdateDB
 import random
 
+from config import *
+
 from dbConfig import USERNAME, PASSWORD
 
 nextAuthTime = int(time.time()) + random.randint(900,3600)
@@ -35,7 +37,16 @@ if __name__ == '__main__':
     numApps = len(appList)
     numProcessed = 0
 
-    api = connect()
+    def apiConnect():
+      if len(ANDROID_ID_S) > 0:
+        # Pick a random account to use
+        i = random.randint(0, len(ANDROID_ID_S) - 1)
+        return connect(ANDROID_ID_S[i], GOOGLE_LOGIN_S[i], GOOGLE_PASSWORD_S[i], AUTH_TOKEN_S[i])
+      else:
+        # Use a single account
+        return connect(ANDROID_ID, GOOGLE_LOGIN, GOOGLE_PASSWORD, AUTH_TOKEN)
+
+    api = apiConnect()
     nextAuthTime = int(time.time()) + random.randint(900,3600)
     def downloadPackage(packagename, db=db, fileDir=fileDir):
         global nextAuthTime
@@ -44,13 +55,13 @@ if __name__ == '__main__':
         global numApps
         try:
           if int(time.time()) > nextAuthTime:
-              api = connect()
-              nextAuthTime = int(time.time()) + random.randint(900,3600)
+            api = apiConnect()
+            nextAuthTime = int(time.time()) + random.randint(900,3600)
 
-              # Update progress
-              percent = (float(numProcessed)/numApps) * 100
-              progress = "%d \t %.2f%s" % (int(time.time()), percent, "%")
-              progressFile.write(progress + "\n")
+            # Update progress
+            percent = (float(numProcessed)/numApps) * 100
+            progress = "%d \t %.2f%s" % (int(time.time()), percent, "%")
+            progressFile.write(progress + "\n")
 
           success, msg = downloadApkAndUpdateDB(api, db, packagename, fileDir)
           

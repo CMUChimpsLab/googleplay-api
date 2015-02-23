@@ -1,14 +1,10 @@
 #!/usr/bin/python
 
-# Do not remove
-GOOGLE_LOGIN = GOOGLE_PASSWORD = AUTH_TOKEN = None
-
 import sys
 import traceback
 import time
 from pprint import pprint
 
-from config import *
 from googleplay import GooglePlayAPI
 from helpers import sizeof_fmt
 
@@ -19,10 +15,10 @@ import datetime
 
 
 # Connect
-def connect():
-    api = GooglePlayAPI(ANDROID_ID)
+def connect(android_id, google_login, google_password, auth_token):
+    api = GooglePlayAPI(android_id)
     try:
-      api.login(GOOGLE_LOGIN, GOOGLE_PASSWORD, AUTH_TOKEN)
+      api.login(google_login, google_password, auth_token)
     except:
       print >> sys.stderr, int(time.time()) 
       traceback.print_exc(file=sys.stderr)
