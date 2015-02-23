@@ -34,7 +34,7 @@ def downloadApkAndUpdateDB(api, db, packagename, fileDir):
     try:
       m = api.details(packagename)
     except:
-      print >> sys.stderr, int(time.time()), packagename
+      sys.stderr.write("%d \t %s\n" % (int(time.time()), packagename))
       traceback.print_exc(file=sys.stderr)
       return (False, traceback.format_exc())
 
@@ -43,7 +43,7 @@ def downloadApkAndUpdateDB(api, db, packagename, fileDir):
     try:
       ot = doc.offer[0].offerType
     except:
-      print >> sys.stderr, int(time.time()), packagename
+      sys.stderr.write("%d \t %s\n" % (int(time.time()), packagename))
       print >> sys.stderr, doc
       traceback.print_exc(file=sys.stderr)
       return (False, traceback.format_exc())
@@ -103,12 +103,12 @@ def downloadApkAndUpdateDB(api, db, packagename, fileDir):
       try:
         data = api.download(packageName, vc, ot)
       except Exception as e:
-        print >> sys.stderr,int(time.time()), packageName
+        sys.stderr.write("%d \t %s\n" % (int(time.time()), packageName))
         traceback.print_exc(file=sys.stderr)
         isCurrentVersionDownloaded = False
         ret = (False, traceback.format_exc())
       else:
-        print int(time.time()), packageName
+        print "%d \t %s" % (int(time.time()), packageName)
         print "Downloading %s..." % sizeof_fmt(doc.details.appDetails.installationSize),
         if preFileDir != '':
           fileDir = preFileDir
@@ -119,7 +119,7 @@ def downloadApkAndUpdateDB(api, db, packagename, fileDir):
     else:
         if isApkUpdated == False and preIsCurrentVersionDownloaded == True:
             isCurrentVersionDownloaded = True
-        print int(time.time()), packageName
+        print "%d \t %s" % (int(time.time()), packageName)
         print "Escape downloading isFree: %s, isSizeExceed: %s, preIsCurrentVersionDownloaded: %s, isApkUpdated: %s"%( isFree, isSizeExceed, preIsCurrentVersionDownloaded, isApkUpdated)
     
     #update apkInfo entry if infoDict updated (a new entry is also counted as updated) or current version apkDownloaded first time
