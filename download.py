@@ -36,6 +36,15 @@ def downloadApkAndUpdateDB(api, db, packagename, fileDir):
 
     doc = m.docV2
     vc = doc.details.appDetails.versionCode
+
+    # Zero length offer means the app is not found, possibly removed from the 
+    # play store.
+    # We treat this as a success case so we can treat this app as processed 
+    # and avoid re-downloading it if we need to recover from an exception.
+    if (len(doc.offer) == 0):
+      sys.stdout.write("%d \t %s \t Not Found\n" % (int(time.time()), packagename))
+      return (True, packagename + " Not Found")
+
     try:
       ot = doc.offer[0].offerType
     except:
@@ -115,8 +124,8 @@ def downloadApkAndUpdateDB(api, db, packagename, fileDir):
     else:
         if isApkUpdated == False and preIsCurrentVersionDownloaded == True:
             isCurrentVersionDownloaded = True
-        print "%d \t %s" % (int(time.time()), packageName)
-        print "Escape downloading isFree: %s, isSizeExceed: %s, preIsCurrentVersionDownloaded: %s, isApkUpdated: %s"%( isFree, isSizeExceed, preIsCurrentVersionDownloaded, isApkUpdated)
+        s = "Escape downloading isFree: %s, isSizeExceed: %s, preIsCurrentVersionDownloaded: %s, isApkUpdated: %s"%( isFree, isSizeExceed, preIsCurrentVersionDownloaded, isApkUpdated)
+        print "%d \t %s \t %s" % (int(time.time()), packageName, s)
     
     #update apkInfo entry if infoDict updated (a new entry is also counted as updated) or current version apkDownloaded first time
     if preInfoEntry != infoDict or (preIsCurrentVersionDownloaded == False and isCurrentVersionDownloaded == True):

@@ -18,12 +18,12 @@ if __name__ == '__main__':
 
     if (len(sys.argv) < 4):
       print """Usage: python downloadFromList.py app_list_file file_dir 
-        downloaded_list_file [download_progress_file]"""
+        processed_list_file [download_progress_file]"""
       sys.exit(0)
 
     appListFile = open(sys.argv[1])
     fileDir = sys.argv[2]
-    downloadedList = open(sys.argv[3], "a")
+    processedList = open(sys.argv[3], "a")
     progressFile = sys.stdout
 
     if (len(sys.argv) == 5):
@@ -75,7 +75,7 @@ if __name__ == '__main__':
           
           if success:
             # Write package name to downloaded list
-            downloadedList.write(packagename + "\n")
+            processedList.write(packagename + "\n")
           
           numProcessed += 1
 
@@ -88,7 +88,7 @@ if __name__ == '__main__':
     for app in appList:
       downloadPackage(app)
 
-    downloadedList.close()
+    processedList.close()
     progressFile.close()
 
     """
