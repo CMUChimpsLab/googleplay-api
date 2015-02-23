@@ -38,13 +38,21 @@ if __name__ == '__main__':
     numProcessed = 0
 
     def apiConnect():
+      android_id = ANDROID_ID
+      google_login = GOOGLE_LOGIN
+      google_password = GOOGLE_PASSWORD
+      auth_token = AUTH_TOKEN
+
       if len(ANDROID_ID_S) > 0:
         # Pick a random account to use
         i = random.randint(0, len(ANDROID_ID_S) - 1)
-        return connect(ANDROID_ID_S[i], GOOGLE_LOGIN_S[i], GOOGLE_PASSWORD_S[i], AUTH_TOKEN_S[i])
-      else:
-        # Use a single account
-        return connect(ANDROID_ID, GOOGLE_LOGIN, GOOGLE_PASSWORD, AUTH_TOKEN)
+        android_id = ANDROID_ID_S[i]
+        google_login = GOOGLE_LOGIN_S[i]
+        google_password = GOOGLE_PASSWORD_S[i]
+        auth_token = AUTH_TOKEN_S[i]
+
+      print "Using account %s" % (google_login)
+      return connect(android_id, google_login, google_password, auth_token)
 
     api = apiConnect()
     nextAuthTime = int(time.time()) + random.randint(900,3600)
