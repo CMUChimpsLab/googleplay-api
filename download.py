@@ -36,8 +36,8 @@ def downloadApkAndUpdateDB(api, db, packagename, fileDir):
     except:
       print >> sys.stderr, int(time.time()), packagename
       traceback.print_exc(file=sys.stderr)
-      return
-      
+      return (False, traceback.format_exc())
+
     doc = m.docV2
     vc = doc.details.appDetails.versionCode
     try:
@@ -46,7 +46,7 @@ def downloadApkAndUpdateDB(api, db, packagename, fileDir):
       print >> sys.stderr, int(time.time()), packagename
       print >> sys.stderr, doc
       traceback.print_exc(file=sys.stderr)
-      return
+      return (False, traceback.format_exc())
     
     
     packageName = doc.details.appDetails.packageName
@@ -94,6 +94,9 @@ def downloadApkAndUpdateDB(api, db, packagename, fileDir):
     preIsCurrentVersionDownloaded = preInfoEntry.pop('isCurrentVersionDownloaded', False)
     preIsApkUpdated = preInfoEntry.pop('isApkUpdated', False)
     preFileDir = preInfoEntry.pop('fileDir', '')
+
+    # Default return value
+    ret = (True, packageName)
     
     # Download when it is free and not exceed 50 mb and (current version in apkInfo was not downloaded or app has been updated since last time update apkInfo version)
     if isFree and (not isSizeExceed) and ((not preIsCurrentVersionDownloaded) or isApkUpdated):
@@ -103,6 +106,7 @@ def downloadApkAndUpdateDB(api, db, packagename, fileDir):
         print >> sys.stderr,int(time.time()), packageName
         traceback.print_exc(file=sys.stderr)
         isCurrentVersionDownloaded = False
+        ret = (False, traceback.format_exc())
       else:
         print int(time.time()), packageName
         print "Downloading %s..." % sizeof_fmt(doc.details.appDetails.installationSize),
@@ -143,6 +147,8 @@ def downloadApkAndUpdateDB(api, db, packagename, fileDir):
         infoDict['updatedTimestamp'] = datetime.datetime.utcnow()
         #even the download is not successful, if the appDetails is updated, the db entry will be updated
         db.apkInfo.update({'packageName': packageName}, infoDict, upsert=True)
+
+    return ret
 
 if __name__ == '__main__':
     if (len(sys.argv) < 2):
