@@ -16,31 +16,49 @@ if __name__ == '__main__':
 
     if (len(sys.argv) < 4):
       print """Usage: python downloadFromList.py app_list_file file_dir 
-        downloaded_list_file"""
+        downloaded_list_file [download_progress_file]"""
       sys.exit(0)
 
     appListFile = open(sys.argv[1])
     fileDir = sys.argv[2]
     downloadedList = open(sys.argv[3], "a")
+    progressFile = sys.stdout
+
+    if (len(sys.argv) == 5):
+      progressFile = open(sys.argv[4], "a") 
 
     #the first line of appList is a timestamp
     appListFile.readline()
     appList = appListFile.read().split('\n')
     appListFile.close()
+
+    numApps = len(appList)
+    numProcessed = 0
+
     api = connect()
     nextAuthTime = int(time.time()) + random.randint(900,3600)
     def downloadPackage(packagename, db=db, fileDir=fileDir):
         global nextAuthTime
         global api
+        global numProcessed
+        global numApps
         try:
           if int(time.time()) > nextAuthTime:
               api = connect()
               nextAuthTime = int(time.time()) + random.randint(900,3600)
+
+              # Update progress
+              percent = (float(numProcessed)/numApps) * 100
+              progress = "%d \t %.2f%s" % (int(time.time()), percent, "%")
+              progressFile.write(progress + "\n")
+
           success, msg = downloadApkAndUpdateDB(api, db, packagename, fileDir)
           
           if success:
             # Write package name to downloaded list
             downloadedList.write(packagename + "\n")
+          
+          numProcessed += 1
 
           # TODO Send email to alert for failure
         except:
@@ -49,7 +67,10 @@ if __name__ == '__main__':
         return packagename
       
     for app in appList:
-        downloadPackage(app)
+      downloadPackage(app)
+
+    downloadedList.close()
+    progressFile.close()
 
     """
     the following code always stops for a period of time
