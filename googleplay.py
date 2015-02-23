@@ -272,7 +272,7 @@ class GooglePlayAPI(object):
         url = message.payload.buyResponse.purchaseStatusResponse.appDeliveryData.downloadUrl
 
         # There was an error
-        if not(message.commands.displayErrorMessage == None):
+        if len(message.commands.displayErrorMessage) is not 0: 
           raise Exception(message.commands.displayErrorMessage)
         
         try:
