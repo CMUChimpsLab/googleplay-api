@@ -70,6 +70,7 @@ if __name__ == '__main__':
             percent = (float(numProcessed)/numApps) * 100
             progress = "%d \t %.2f%s" % (int(time.time()), percent, "%")
             progressFile.write(progress + "\n")
+            progressFile.flush()
 
           success, msg = downloadApkAndUpdateDB(api, db, packagename, fileDir)
           
