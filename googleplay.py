@@ -15,6 +15,7 @@ import googleplay_pb2
 import config
 
 import sys
+import time
 
 class LoginError(Exception):
     def __init__(self, value):
@@ -174,7 +175,21 @@ class GooglePlayAPI(object):
         gzipper = gzip.GzipFile(fileobj=data)
         data = gzipper.read()
         '''
-        message = googleplay_pb2.ResponseWrapper.FromString(data)
+        
+        # Sometimes the protobuf response might have an
+        # "Unexpected end-group tag." error. Retrying usually resolves it.
+        numRetry = 5
+        for i in xrange(0, numRetry):
+          try:
+            message = googleplay_pb2.ResponseWrapper.FromString(data)
+          except DecodeError as e:
+            if i == (numRetry - 1):
+              raise e
+            else:
+              time.sleep(3)
+              continue
+          break
+
         self._try_register_preFetch(message)
 
         # Debug
