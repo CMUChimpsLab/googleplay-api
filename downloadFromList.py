@@ -77,6 +77,7 @@ if __name__ == '__main__':
           if success:
             # Write package name to downloaded list
             processedList.write(packagename + "\n")
+            processedList.flush()
           
           numProcessed += 1
 
