@@ -83,13 +83,18 @@ def downloadApkAndUpdateDB(api, db, packagename, fileDir):
     isFree = not doc.offer[0].checkoutFlowRequired
     isCurrentVersionDownloaded = False
     
-    #If exceed 50mb apk will not be downloaded, 50mb limit is set on play store by googleplay
-    #http://developer.android.com/distribute/googleplay/publish/preparing.html#size
-    isSizeExceed = None
-    if doc.details.appDetails.installationSize > 52428800:
-      isSizeExceed = True
-    else:
-      isSizeExceed = False
+    # 2015-04-17: Removed apk size restriction.
+    # According to 
+    # http://android-developers.blogspot.com/2012/03/android-apps-break-50mb-barrier.html
+    # Each apk file will be at most 50 mb. An app that is listed as bigger than
+    # 50 mb on the playstore will have expansion packs that can supply 
+    # additional things like graphics, etc. 
+    # http://developer.android.com/distribute/googleplay/publish/preparing.html#size
+    isSizeExceed = False
+    # if doc.details.appDetails.installationSize > 52428800:
+    #   isSizeExceed = True
+    # else:
+    #   isSizeExceed = False
     
     #Remove db entry fields which are not in infoDict
     preInfoEntry = db.apkInfo.find_one({'packageName': packageName}, {'isFree':0, 'isSizeExceed': 0, 'updatedTimestamp':0, '_id':0})
