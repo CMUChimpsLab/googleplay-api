@@ -3,12 +3,14 @@
 import sys
 import traceback
 import time
+import random
 from pprint import pprint
 
 from googleplay import GooglePlayAPI
 from helpers import sizeof_fmt
 
 from pymongo import MongoClient
+from config import *
 from dbConfig import USERNAME, PASSWORD
 
 import datetime
@@ -162,9 +164,8 @@ def downloadApkAndUpdateDB(api, db, packagename, fileDir):
 
 if __name__ == '__main__':
     if (len(sys.argv) < 2):
-        print "Usage: %s packagename [filename]"
+        print "Usage: %s packagename [directory to store the apk]"
         print "Download an app."
-        print "If filename is not present, will write to packagename.apk."
         sys.exit(0)
     
     packagename = sys.argv[1]
@@ -178,5 +179,22 @@ if __name__ == '__main__':
     client["admin"].authenticate(USERNAME, PASSWORD)
     db = client['androidApp']
     
-    api = connect()
+    def apiConnect():
+      android_id = ANDROID_ID
+      google_login = GOOGLE_LOGIN
+      google_password = GOOGLE_PASSWORD
+      auth_token = AUTH_TOKEN
+
+      if len(ANDROID_ID_S) > 0:
+        # Pick a random account to use
+        i = random.randint(0, len(ANDROID_ID_S) - 1)
+        android_id = ANDROID_ID_S[i]
+        google_login = GOOGLE_LOGIN_S[i]
+        google_password = GOOGLE_PASSWORD_S[i]
+        auth_token = AUTH_TOKEN_S[i]
+
+      print "\n%d \t Using account %s\n" % (int(time.time()), google_login)
+      return connect(android_id, google_login, google_password, auth_token)
+
+    api = apiConnect()
     downloadApkAndUpdateDB(api, db, packagename, fileDir)
