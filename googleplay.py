@@ -118,10 +118,10 @@ class GooglePlayAPI(object):
                                 "androidId": self.androidId,
                                 "app": "com.android.vending",
                                 #"client_sig": self.client_sig,
-                                "device_country": "fr",
-                                "operatorCountry": "fr",
-                                "lang": "fr",
-                                "sdk_version": "16"}
+                                "device_country": "us",
+                                "operatorCountry": "us",
+                                "lang": "us",
+                                "sdk_version": "23"}
             headers = {
                 "Accept-Encoding": "",
             }
@@ -154,7 +154,8 @@ class GooglePlayAPI(object):
                                     "X-DFE-Device-Id": self.androidId,
                                     "X-DFE-Client-Id": "am-android-google",
                                     #"X-DFE-Logging-Id": self.loggingId2, # Deprecated?
-                                    "User-Agent": "Android-Finsky/3.7.13 (api=3,versionCode=8013013,sdk=16,device=crespo,hardware=herring,product=soju)",
+                                    #"User-Agent": "Android-Finsky/3.7.13 (api=3,versionCode=8013013,sdk=16,device=crespo,hardware=herring,product=soju)",
+                                     "User-Agent": "Android-Finsky/6.7.24 (api=3,versionCode=80682400,sdk=23,device=hammerhead,hardware=hammerhead,product=hammerhead)",
                                     "X-DFE-SmallestScreenWidthDp": "320",
                                     "X-DFE-Filter-Level": "3",
                                     "Accept-Encoding": "",
@@ -301,7 +302,8 @@ class GooglePlayAPI(object):
         }
 
         headers = {
-                   "User-Agent" : "AndroidDownloadManager/4.1.1 (Linux; U; Android 4.1.1; Nexus S Build/JRO03E)",
+                   "User-Agent" : "AndroidDownloadManager/6.0.1 (Linux; U; Android 6.0.1; Nexus 5 Build/MOB30P)",
+                   #"User-Agent" : "AndroidDownloadManager/4.1.1 (Linux; U; Android 4.1.1; Nexus S Build/JRO03E)",
                    "Accept-Encoding": "",
                   }
 
